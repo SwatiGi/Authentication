@@ -1,19 +1,20 @@
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import classes from "./AuthForm.module.css";
+import { LoginContext } from "../contextApi/Context";
 
 const AuthForm = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const { setIsLogin } = useContext(LoginContext);
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
-
   const navigate = useNavigate();
 
   // Toggle between Login and SignUp
   const switchAuthModeHandler = () => {
-    setIsLogin((prevState) => !prevState);
+    setIsLoginMode((prevState) => !prevState);
   };
 
   // Handle Submit
@@ -26,12 +27,10 @@ const AuthForm = () => {
     setIsLoading(true);
 
     let url;
-    if (isLogin) {
-      // Login
+    if (isLoginMode) {
       url =
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyARDxt5Lm3M6csGWS9yZONyj74rf0MBs-Y";
     } else {
-      //  SignUp
       url =
         "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyARDxt5Lm3M6csGWS9yZONyj74rf0MBs-Y";
     }
@@ -43,9 +42,7 @@ const AuthForm = () => {
         password: enteredPassword,
         returnSecureToken: true,
       }),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     })
       .then((response) => {
         setIsLoading(false);
@@ -54,40 +51,19 @@ const AuthForm = () => {
         } else {
           return response.json().then((data) => {
             let errorMessage = "Authentication failed!";
-
-           
             if (data && data.error && data.error.message) {
-              switch (data.error.message) {
-                case "EMAIL_EXISTS":
-                  errorMessage = "This email is already registered!";
-                  break;
-                case "EMAIL_NOT_FOUND":
-                  errorMessage = "Email not found!";
-                  break;
-                case "INVALID_PASSWORD":
-                  errorMessage = "Invalid password!";
-                  break;
-                case "USER_DISABLED":
-                  errorMessage = "This account has been disabled!";
-                  break;
-                default:
-                  errorMessage = data.error.message;
-              }
+              errorMessage = data.error.message;
             }
-
             throw new Error(errorMessage);
           });
         }
       })
       .then((data) => {
         console.log("Success:", data);
-
-        
         localStorage.setItem("token", data.idToken);
-
-          alert("Authentication successful!");
-        //   we are redirect to the home page 
-        navigate("/"); 
+        setIsLogin(true);   // ✅ Context update
+        alert("Authentication successful!");
+        navigate("/");
       })
       .catch((err) => {
         alert(err.message);
@@ -96,7 +72,7 @@ const AuthForm = () => {
 
   return (
     <section className={classes.auth}>
-      <h1>{isLogin ? "Login" : "Sign Up"}</h1>
+      <h1>{isLoginMode ? "Login" : "Sign Up"}</h1>
       <form onSubmit={submitHandler}>
         <div className={classes.control}>
           <label htmlFor="email">Your Email</label>
@@ -107,7 +83,7 @@ const AuthForm = () => {
           <input type="password" id="password" required ref={passwordInputRef} />
         </div>
         <div className={classes.actions}>
-          {!isLoading && <button>{isLogin ? "Login" : "Create Account"}</button>}
+          {!isLoading && <button>{isLoginMode ? "Login" : "Create Account"}</button>}
           {isLoading && <p>Sending request...</p>}
 
           <button
@@ -115,7 +91,7 @@ const AuthForm = () => {
             className={classes.toggle}
             onClick={switchAuthModeHandler}
           >
-            {isLogin ? "Create new account" : "Login with existing account"}
+            {isLoginMode ? "Create new account" : "Login with existing account"}
           </button>
         </div>
       </form>
@@ -124,4 +100,5 @@ const AuthForm = () => {
 };
 
 export default AuthForm;
+
 
