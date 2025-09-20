@@ -7,7 +7,7 @@ import { AuthContext } from '../../store/AuthContext'
 const MainNavigation = () => {
   const authCtx = useContext(AuthContext);
   const isLoggedIn = authCtx.isLoggedIn;
-  const logoutHandler = authCtx.logoutHandler;
+  const logoutHandler = authCtx.logout;
   return (
     <header className={classes.header}>
       <Link to='/'>
