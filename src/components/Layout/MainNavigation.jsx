@@ -1,53 +1,29 @@
-import { NavLink } from "react-router-dom";
-import classes from "./MainNavigation.module.css";
-import { useContext } from "react";
-import { LoginContext } from "../contextApi/Context";
+import { Link } from 'react-router-dom';
+
+import classes from './MainNavigation.module.css';
+import { useContext } from 'react'
+import { AuthContext } from '../../store/AuthContext'
 
 const MainNavigation = () => {
-  const { isLogin, setIsLogin } = useContext(LoginContext);
-
-  const logoutHandler = () => {
-    localStorage.removeItem("token");
-    setIsLogin(false);
-  };
-
+  const authCtx = useContext(AuthContext);
+  const isLoggedIn = authCtx.isLoggedIn;
   return (
     <header className={classes.header}>
-      <NavLink to="/" className={classes.logo}>
-        React Auth
-      </NavLink>
+      <Link to='/'>
+        <div className={classes.logo}>React Auth</div>
+      </Link>
       <nav>
         <ul>
-          {!isLogin && (
-            <li>
-              <NavLink
-                to="/auth"
-                className={({ isActive }) =>
-                  isActive ? classes.active : undefined
-                }
-              >
-                Login
-              </NavLink>
-            </li>
-          )}
-
-          {isLogin && (
-            <>
-              <li>
-                <NavLink
-                  to="/profile"
-                  className={({ isActive }) =>
-                    isActive ? classes.active : undefined
-                  }
-                >
-                  Profile
-                </NavLink>
-              </li>
-              <li>
-                <button onClick={logoutHandler}>Logout</button>
-              </li>
-            </>
-          )}
+          {!isLoggedIn&&<li>
+            <Link to='/auth'>Login</Link>
+          </li>}
+          {isLoggedIn&& <li>
+            <Link to='/profile'>Profile</Link>
+          </li>}
+         
+          {isLoggedIn&&<li>
+            <button>Logout</button>
+          </li>}
         </ul>
       </nav>
     </header>

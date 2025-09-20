@@ -1,38 +1,34 @@
-import { useContext, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useContext } from "react";
 import classes from "./AuthForm.module.css";
-import { LoginContext } from "../contextApi/Context";
+import { AuthContext } from "../../store/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const AuthForm = () => {
-  const { setIsLogin } = useContext(LoginContext);
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-
+  const navigate = useNavigate();
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
-  const navigate = useNavigate();
+  const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Toggle between Login and SignUp
+  const authCtx = useContext(AuthContext);
+
   const switchAuthModeHandler = () => {
-    setIsLoginMode((prevState) => !prevState);
+    setIsLogin((prevState) => !prevState);
   };
 
-  // Handle Submit
   const submitHandler = (event) => {
     event.preventDefault();
 
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
 
+    let url;
     setIsLoading(true);
 
-    let url;
-    if (isLoginMode) {
-      url =
-        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyARDxt5Lm3M6csGWS9yZONyj74rf0MBs-Y";
+    if (isLogin) {
+      url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyARDxt5Lm3M6csGWS9yZONyj74rf0MBs-Y`;
     } else {
-      url =
-        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyARDxt5Lm3M6csGWS9yZONyj74rf0MBs-Y";
+      url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyARDxt5Lm3M6csGWS9yZONyj74rf0MBs-Y`;
     }
 
     fetch(url, {
@@ -42,14 +38,16 @@ const AuthForm = () => {
         password: enteredPassword,
         returnSecureToken: true,
       }),
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
-      .then((response) => {
+      .then((res) => {
         setIsLoading(false);
-        if (response.ok) {
-          return response.json();
+        if (res.ok) {
+          return res.json();
         } else {
-          return response.json().then((data) => {
+          return res.json().then((data) => {
             let errorMessage = "Authentication failed!";
             if (data && data.error && data.error.message) {
               errorMessage = data.error.message;
@@ -59,11 +57,11 @@ const AuthForm = () => {
         }
       })
       .then((data) => {
-        console.log("Success:", data);
-        localStorage.setItem("token", data.idToken);
-        setIsLogin(true);   // ✅ Context update
-        alert("Authentication successful!");
-        navigate("/");
+        authCtx.login(data.idToken); // 🔑 Save token in context + localStorage
+        navigate("/"); // redirect to home
+        alert(
+          `${isLogin ? "Login Successful!" : "Account Created Successfully!"}`
+        );
       })
       .catch((err) => {
         alert(err.message);
@@ -72,7 +70,7 @@ const AuthForm = () => {
 
   return (
     <section className={classes.auth}>
-      <h1>{isLoginMode ? "Login" : "Sign Up"}</h1>
+      <h1>{isLogin ? "Login" : "Sign Up"}</h1>
       <form onSubmit={submitHandler}>
         <div className={classes.control}>
           <label htmlFor="email">Your Email</label>
@@ -80,18 +78,27 @@ const AuthForm = () => {
         </div>
         <div className={classes.control}>
           <label htmlFor="password">Your Password</label>
-          <input type="password" id="password" required ref={passwordInputRef} />
+          <input
+            type="password"
+            id="password"
+            required
+            ref={passwordInputRef}
+            minLength={6}
+          />
         </div>
         <div className={classes.actions}>
-          {!isLoading && <button>{isLoginMode ? "Login" : "Create Account"}</button>}
-          {isLoading && <p>Sending request...</p>}
-
+          {!isLoading && (
+            <button type="submit">{isLogin ? "Login" : "Create Account"}</button>
+          )}
+          {isLoading && <p>Loading...</p>}
+        </div>
+        <div className={classes.actions}>
           <button
             type="button"
             className={classes.toggle}
             onClick={switchAuthModeHandler}
           >
-            {isLoginMode ? "Create new account" : "Login with existing account"}
+            {isLogin ? "Create new account" : "Login with existing account"}
           </button>
         </div>
       </form>
@@ -100,5 +107,7 @@ const AuthForm = () => {
 };
 
 export default AuthForm;
+
+
 
 
