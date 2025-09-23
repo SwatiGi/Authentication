@@ -21,11 +21,13 @@ const AuthForm = () => {
 
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
-
+    console.log(enteredEmail)
+    
     let url;
     setIsLoading(true);
 
     if (isLogin) {
+      localStorage.setItem("email",enteredEmail)
       url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyARDxt5Lm3M6csGWS9yZONyj74rf0MBs-Y`;
     } else {
       url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyARDxt5Lm3M6csGWS9yZONyj74rf0MBs-Y`;

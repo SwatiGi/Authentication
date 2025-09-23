@@ -1,3 +1,4 @@
+import axios from "axios"
 import { createContext ,useEffect,useState,useCallback} from "react"
 
 export const AuthContext = createContext({
@@ -39,12 +40,16 @@ export const AuthContextProvider = ({ children }) => {
         return null;
     }
     
+    const [showData, setShowData] = useState([]);
     const [token, setToken] = useState(initialToken)
     const userIsLoggedIn = !!token;
-    const loginHandler = (token,expirationTime) => {
+    const loginHandler =async (token,expirationTime) => {
         setToken(token);
         localStorage.setItem("token", token);
-        localStorage.setItem("expirationTime",expirationTime)
+        let emailId = localStorage.getItem("email").replace(/[@.]/g,"_")
+        localStorage.setItem("expirationTime", expirationTime)
+        let get = await axios.get(`https://crudcrud.com/api/7b295782952646a7a42f65e5e639e51c/${emailId}`)
+        setShowData(get.data)
      const remainingTime=   calculateRemainingTime(expirationTime);
         logoutTimer = setTimeout(logoutHandler, remainingTime);
     }
@@ -54,10 +59,10 @@ export const AuthContextProvider = ({ children }) => {
         localStorage.removeItem("expirationTime")
         
         if (logoutTimer) {
-            console.log(tokenData.duration)
+        
             clearTimeout(logoutTimer);
         }
-        
+        window.location.reload()
     },[])
     useEffect(() => {
         if (tokenData) {
@@ -69,10 +74,30 @@ export const AuthContextProvider = ({ children }) => {
         token: token,
         isLoggedIn: userIsLoggedIn,
         login: loginHandler,
-        logout:logoutHandler,
+        logout: logoutHandler,
+        showData: showData,
+        setShowData:setShowData
      }
     return <AuthContext.Provider value={contextValue}>
     {children}
     
     </AuthContext.Provider>
 }
+
+
+
+//  const [showData, setShowData] = useState([]);
+//  useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         let res = await axios.get(
+//           "https://crudcrud.com/api/7b295782952646a7a42f65e5e639e51c/data"
+//         );
+//         setShowData(res.data);
+//       } catch (error) {
+//         console.log("Error while fetching data", error);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
