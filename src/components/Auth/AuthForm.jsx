@@ -57,8 +57,9 @@ const AuthForm = () => {
         }
       })
       .then((data) => {
-        authCtx.login(data.idToken); // 🔑 Save token in context + localStorage
-        navigate("/"); // redirect to home
+        const expirationTime = new Date((new Date().getTime()+(+data.expiresIn*1000)))
+        authCtx.login(data.idToken,expirationTime.toISOString()); 
+        navigate("/");
         alert(
           `${isLogin ? "Login Successful!" : "Account Created Successfully!"}`
         );
